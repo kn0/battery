@@ -1,0 +1,52 @@
+<ruby>
+=begin
+  Name:  battery/ms08_067_check.rc
+    This script is intended to be used with the Metasploit Framework as a part of the battery suite of resource scripts
+    For more information see:
+      Battery Resource Scripts: https://github.com/kn0/battery
+      Metasploit Framework:  https://github.com/rapid7/metasploit-framework
+
+  Author: kn0
+    twitter: @TrentonIvey
+    email: "Trenton.Ivey@example.com".gsub(/example/,'gmail')
+    web: kn0.ninja
+
+  Description:
+    This Metasploit RC-File is used to check for the presence of MS08_067.
+    It does so by using exploit/windows/smb/ms08_067_netapi against all discovered services running on 445/TCP
+    This will only check host entries that have know Windows os_names in the current workspace.
+    A quick way to find the os_names for relevant targets is by using auxiliary/scanner/smb/smb_version module
+    against all hosts with port 445 open.
+=end
+
+# Print Header
+print_status "Using check from exploit/windows/smb/ms08_067_netapi"
+  
+# Get a list of target services
+targets = []
+begin
+  framework.db.services.each do |service|
+    if ( service.port.eql? 445 and  service.state.eql? 'open' and service.proto.eql? 'tcp' and  Msf::OperatingSystems::Match::WINDOWS.match service.host.os_name)
+      targets << service.host.address
+    end
+  end
+  # Remove any duplicate entries
+  targets.uniq!
+rescue ActiveRecord::ConnectionNotEstablished
+  puts "DB not connected..."
+  return
+end
+
+if targets.empty?
+  print_warning "No targets found"
+else
+  # Setup the module
+  self.run_single("use exploit/windows/smb/ms08_067_netapi")
+  self.run_single("set VERBOSE true")
+  
+  # Run the module once for each discovered target port (with the associated hosts)
+  targets = targets.join(' ')
+  print_status "Target List: #{targets}"
+  self.run_single("check '#{targets}'")
+end
+</ruby>

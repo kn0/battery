@@ -1,0 +1,54 @@
+# battery.rc
+# Author: kn0 (twitter: @TrentonIvey)
+# This Metasploit RC-File is used to run all resource files in the battery folder. This allows testers to perform a battery of tests
+# Each test in the battery folder should be self contained, and should be able to guess reasonable target services
+pushm
+unset all
+<ruby>
+self.run_single("pushm")
+
+# Setup spool
+if @output.respond_to? :fd
+  old_spool = @output.fd.path
+else
+  old_spool = false
+end
+
+battery_spool = File.join(::Msf::Config.log_directory, "battery_#{framework.db.workspace.name}_#{Time.now.strftime("%Y%m%d%H%M%S")}")
+self.run_single("spool #{battery_spool}")
+
+# Print a header
+print_line "$" * 120
+print_line "  Battery Run"
+print_line "    - Time: #{Time.now.strftime('%Y%m%dT%H%M%S%z')}"
+print_line "    - Workspace: #{framework.db.workspace.name}"
+print_line "    - Source Host: #{Socket.gethostname}"
+print_line "$" * 120
+
+# Run all resource files in the battery folder
+battery_path = Pathname.new(::Msf::Config.user_script_directory + File::SEPARATOR + "resource" + File::SEPARATOR + "battery")
+battery_path.each_child do |res_path|
+  if (res_path.file? and res_path.readable? and res_path.extname.downcase.eql? ".rc")
+    print_line
+    print_line "=" * 120
+    self.run_single('unset all')
+    load_resource res_path
+  end
+end
+
+# Print Footer
+print_line
+print_line "$" * 120
+print_line "Battery Run Done: #{Time.now.strftime('%Y%m%dT%H%M%S%z')}"
+print_line "Resetting Environment"
+
+# Reset spool
+if old_spool
+  self.run_single("spool #{old_spool}")
+else
+  self.run_single("spool off")
+end
+
+</ruby>
+unset all
+popm

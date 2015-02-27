@@ -1,0 +1,50 @@
+<ruby>
+=begin
+  Name:  battery/smb_anonymous_enumshares.rc
+    This script is intended to be used with the Metasploit Framework as a part of the battery suite of resource scripts
+    For more information see:
+      Battery Resource Scripts: https://github.com/kn0/battery
+      Metasploit Framework:  https://github.com/rapid7/metasploit-framework
+
+  Author: kn0
+    twitter: @TrentonIvey
+    email: "Trenton.Ivey@example.com".gsub(/example/,'gmail')
+    web: kn0.ninja
+
+  Description:
+    This Metasploit RC-File is used to check for anonymous access to network shares over SMB.
+    It does so by using auxiliary/scanner/smb/smb_enumshares against all discovered SMB services
+    Targets are chosen by matching service names with 'smb' and ports of 139/tcp and 445/tcp
+
+=end
+# Print Header
+print_status "Using auxiliary/scanner/smb/smb_enumshares"
+  
+# Get a list of target services
+targets = []
+begin
+  framework.db.services.each do |service|
+    if ( (service.name =~ /smb/i or service.port.eql? 139 or service.port.eql? 445) and service.state.eql? 'open' and service.proto.eql? 'tcp')
+      targets << service.host.address
+    end
+  end
+  # Remove any duplicate entries
+  targets.uniq!
+rescue ActiveRecord::ConnectionNotEstablished
+  puts "DB not connected..."
+  return
+end
+
+if targets.empty?
+  print_warning "No targets found"
+else
+  # Setup the module
+  self.run_single("use auxiliary/scanner/smb/smb_enumshares")
+  self.run_single("set ShowProgress false")
+  self.run_single("set VERBOSE false")
+  
+  # Run the module against all hosts
+  self.run_single("set RHOSTS #{targets.join(' ')}")
+  self.run_single("run")
+end
+</ruby>

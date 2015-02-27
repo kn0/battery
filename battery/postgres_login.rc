@@ -1,0 +1,58 @@
+<ruby>
+=begin
+  Name:  battery/postgres_login.rc
+    This script is intended to be used with the Metasploit Framework as a part of the battery suite of resource scripts
+    For more information see:
+      Battery Resource Scripts: https://github.com/kn0/battery
+      Metasploit Framework:  https://github.com/rapid7/metasploit-framework
+
+  Author: kn0
+    twitter: @TrentonIvey
+    email: "Trenton.Ivey@example.com".gsub(/example/,'gmail')
+    web: kn0.ninja
+
+  Description:
+    This Metasploit RC-File attempts to authenticate to discovered Postgres services using Metasploit's default posergres credential lists.
+    It does so by using auxiliary/scanner/postgres/postgres_login against all discovered Postgres services
+    Targets are chosen by matching service names with 'postgresql' and ports of 5432/tcp
+
+=end
+# Print Header
+print_status "Using auxiliary/scanner/postgres/postgres_login"
+  
+# Get a list of target services
+targets = []
+begin
+  framework.db.services.each do |service|
+    if ( (service.name =~ /postgresql/i or service.port.eql? 5432) and service.state.eql? 'open' and service.proto.eql? 'tcp')
+      targets << {'ip' => service.host.address, 'port' => service.port}
+    end
+  end
+  # Remove any duplicate entries
+  targets.uniq!
+rescue ActiveRecord::ConnectionNotEstablished
+  puts "DB not connected..."
+  return
+end
+
+if targets.empty?
+  print_warning "No targets found"
+else
+  # Get a lits of unique target ports
+  target_ports = (targets.map {|t| t['port'] }).uniq
+
+  # Setup the module
+  self.run_single("use auxiliary/scanner/postgres/postgres_login")
+  self.run_single("set ShowProgress false")
+  self.run_single("set VERBOSE true")
+  
+  # Run the module once for each discovered target port (with the associated hosts)
+  target_ports.each do |target_port|
+    self.run_single("set RPORT #{target_port}")
+    target_rhosts = ((targets.select {|t| t['port'].eql? target_port}).map {|t| t['ip'] }).join (" ")
+    self.run_single("set RHOSTS #{target_rhosts}")
+
+    self.run_single("run")
+  end
+end
+</ruby>

