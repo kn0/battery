@@ -47,6 +47,6 @@ else
   # Run the module once for each discovered target port (with the associated hosts)
   targets = targets.join(' ')
   print_status "Target List: #{targets}"
-  self.run_single("check '#{targets}'")
+  self.run_single("run '#{targets}'")
 end
 </ruby>
