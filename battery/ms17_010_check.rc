@@ -20,7 +20,7 @@
 =end
 
 # Print Header
-print_status "Using check from auxiliary/scanner/smb/smb_ms17_010"
+print_status "Using auxiliary/scanner/smb/smb_ms17_010"
   
 # Get a list of target services
 targets = []
@@ -42,11 +42,11 @@ if targets.empty?
 else
   # Setup the module
   self.run_single("use auxiliary/scanner/smb/smb_ms17_010")
+  self.run_single("set ShowProgress false")
   self.run_single("set VERBOSE true")
   
-  # Run the module once for each discovered target port (with the associated hosts)
-  targets = targets.join(' ')
-  print_status "Target List: #{targets}"
-  self.run_single("run '#{targets}'")
+  # Run the module against all hosts
+  self.run_single("set RHOSTS #{targets.join(' ')}")
+  self.run_single("run")
 end
 </ruby>
