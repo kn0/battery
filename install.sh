@@ -9,9 +9,11 @@
 # mk dirs
 if [ ! -e "~/.msf4/scripts/" ]
 	then mkdir ~/.msf4/scripts/
+	else :
 fi
 if [ ! -e "~/.msf4/scripts/resource/" ]
 	then mkdir ~/.msf4/scripts/resource/
+	else :
 fi
 # copy battery directory
 cp -R battery ~/.msf4/scripts/resource/battery
