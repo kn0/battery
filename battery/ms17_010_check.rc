@@ -20,7 +20,7 @@
 =end
 
 # Print Header
-print_status "Using check from auxiliary/scanner/smb/smb_ms17_010"
+print_status "Using auxiliary/scanner/smb/smb_ms17_010"
   
 # Get a list of target services
 targets = []
