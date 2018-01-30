@@ -15,7 +15,7 @@ Alternatively, just copy the *battery* folder, along with *battery.rc* to the re
 
 Usage
 ------
-Battery selects targets based off of services included in the Metasploit database. You can use nmap within Metasploit to find hosts and services and add them to the database: `db_nmap -A -v some_host_or_range`
+Battery selects targets based off of services included in the Metasploit database. You can use nmap within Metasploit to find hosts and services and add them to the database: `db_nmap -A -v some_host_or_range` Note: Battery scripts reqire service and OS data, so it is recommended that you run nmap with at least the `-S` and `-O` flags.
 
 Just call the battery.rc resource script within msfconsole to start: `resource battery.rc`
 

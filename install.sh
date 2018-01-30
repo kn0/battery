@@ -6,12 +6,12 @@
 #
 # plz run as root on kali linux
 #
+echo "Installing..."
 # mk dirs
 mkdir -p ~/.msf4/scripts/resource/
-echo "installing..."
-# copy battery directory
-cp -R battery ~/.msf4/scripts/resource/battery
 # copy battery script
-cp battery.rc ~/.msf4/scripts/resource/
+cp -rf battery.rc ~/.msf4/scripts/resource/
+# copy battery directory
+cp -R -rf battery ~/.msf4/scripts/resource/battery
 # let the user know it worked
 echo "battery installed to ~/.msf4/scripts/resource"
