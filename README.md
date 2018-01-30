@@ -6,8 +6,9 @@ Installation
 First, you need to get [Metasploit][msf on github] up and running. Make sure you have the [database configured][msf database setup] (e.g. `service postgresql start && msfdb init`).
 
 
-To 'install' battery, run the install script:
+To 'install' battery, simplt run the install script:
   * `./install.sh`
+
 Alternatively, just copy the *battery* folder, along with *battery.rc* to the resource folder in your Metasploit user's scripts directory (it is usually something like */home/yourname/.msf4/scripts/resouce*). You should have something like:
   * ~/.msf4/scripts/resource/battery/
   * ~/.msf4/scripts/resource/battery.rc
