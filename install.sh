@@ -7,14 +7,8 @@
 # plz run as root on kali linux
 #
 # mk dirs
-if [ ! -e "~/.msf4/scripts/" ]
-	then mkdir ~/.msf4/scripts/
-	else :
-fi
-if [ ! -e "~/.msf4/scripts/resource/" ]
-	then mkdir ~/.msf4/scripts/resource/
-	else :
-fi
+mkdir -p ~/.msf4/scripts/resource/
+echo "installing..."
 # copy battery directory
 cp -R battery ~/.msf4/scripts/resource/battery
 # copy battery script
